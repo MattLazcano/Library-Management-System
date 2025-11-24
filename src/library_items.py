@@ -51,6 +51,8 @@ class LibraryItem(ABC):
 class BookItem(LibraryItem):
     """Regular physical book"""
 
+    def __init__(self, item_id: str, title: str, author: str, genre: str):
+        super().__init__(item_id, title, author, genre)
     @property
     def media_type(self):
         return "Book"
@@ -60,6 +62,9 @@ class BookItem(LibraryItem):
     
 class EBookItem(LibraryItem):
     """Digital book"""
+
+    def __init__(self, item_id: str, title: str, author: str, genre: str):
+        super().__init__(item_id, title, author, genre)
 
     @property
     def media_type(self):
@@ -72,6 +77,9 @@ class EBookItem(LibraryItem):
 class DVDItem(LibraryItem):
     """DVD movie"""
 
+    def __init__(self, item_id: str, title: str, author: str, genre: str):
+        super().__init__(item_id, title, author, genre)
+        
     @property
     def media_type(self):
         return "DVD"
