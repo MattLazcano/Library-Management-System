@@ -4,13 +4,13 @@ from src import library_functions as lib
 class Loan:
     """Represents a loan transaction."""
     
-    def __init__(self, member_id: str, book_id: str, borrow_date: datetime = None, loan_days: int = 14):
+    def __init__(self, member_id: str, item_id: str, borrow_date: datetime = None, loan_days: int = 14):
         """Initialize a Loan record and append to the global loan list."""
-        if not member_id.strip() or not book_id.strip():
-            raise ValueError("Member ID and Book ID cannot be empty.")
+        if not member_id.strip() or not item_id.strip():
+            raise ValueError("Member ID and Item ID cannot be empty.")
         
         self._member_id = member_id
-        self._book_id = book_id
+        self._item_id = item_id
         self._borrow_date = borrow_date or datetime.now()
         self._loan_days = loan_days
         self._due_date = lib.calculate_due_date(self._borrow_date, loan_days)
@@ -19,7 +19,7 @@ class Loan:
         # Automatically add to the global loans list
         loan_record = {
             "member_id": self._member_id,
-            "book_id": self._book_id,
+            "item_id": self._item_id,
             "borrow_date": self._borrow_date,
             "due_date": self._due_date,
             "returned": self._returned
@@ -35,8 +35,8 @@ class Loan:
         return self._member_id
 
     @property
-    def book_id(self):
-        return self._book_id
+    def item_id(self):
+        return self._item_id
 
     @property
     def due_date(self):
@@ -61,4 +61,4 @@ class Loan:
     
     def __str__(self):
         status = "Overdue" if self.is_overdue() else "On time"
-        return f"Loan(Member: {self._member_id}, Book: {self._book_id}, Due: {self._due_date.date()}, Status: {status})"
+        return f"Loan(Member: {self._member_id}, Item: {self._item_id}, Due: {self._due_date.date()}, Status: {status})"

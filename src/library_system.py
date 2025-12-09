@@ -1,66 +1,136 @@
-# --------------------------------------------
-# Project 3 – Integrated Library System
-# Ties together:
-#   - library_functions (Project 1 & 2)
-#   - ObjectCatalog (composition)
-#   - LibraryItem hierarchy (inheritance + polymorphism)
-# --------------------------------------------
+# library_system.py
 
-from datetime import date
-from src.object_catalog import ObjectCatalog
-from src.library_items import BookItem, EBookItem, DVDItem
-import library_functions as lf
+from __future__ import annotations
+
+from datetime import datetime
+from src import library_functions as lib
+from src.class_lib_items import BookItem, EBookItem, DVDItem
+from src.class_member import Member
+from src.class_search import Search
+from src.class_loan import Loan
 
 
 class LibrarySystem:
     """
-    Wrapper that integrates all pieces:
-    - Project 1 functions
-    - Project 2 classes
-    - Project 3 inheritance hierarchy
-    - Project 3 composition catalog
+    High-level facade for the whole library system.
+
+    - Uses LibraryItem subclasses (BookItem, EBookItem, DVDItem) for catalog items
+    - Uses Member for patron accounts
+    - Uses Search for catalog search, reservations, recommendations
+    - Uses Loan for representing individual borrow transactions
+    - All of this is backed by the shared globals in library_functions.py
     """
 
     def __init__(self):
-        # Composition
-        self.catalog = ObjectCatalog()
+        # Just convenient references to the shared state
+        self.catalog = lib.catalog
+        self.members = lib.members
+        self.loans = lib.loans
+        self.waitlists = lib.waitlists
+        self.ratings = lib.ratings
+        self.average_ratings = lib.average_ratings
 
-        # References to existing P1/P2 structures
-        self.members = lf.members
-        self.loans = lf.loans
-        self.waitlists = lf.waitlists
-        self.reservations = lf.reservations
+        # Composition: LibrarySystem HAS a Search controller
+        self.search = Search()
 
-    # --------------------------
-    # Add object-oriented items
-    # --------------------------
-    def add_book(self, item_id, title, author, genre):
-        book = BookItem(item_id, title, author, genre)
-        self.catalog.add(book)
-        return book
+    # ---------------------------
+    # Item creation (Book / E-Book / DVD)
+    # ---------------------------
+    def add_book(
+        self,
+        item_id: str,
+        title: str,
+        author: str,
+        genre: str,
+        copies_total: int = 1,
+    ) -> BookItem:
+        """
+        Create a physical book item and register it in the global catalog.
 
-    def add_ebook(self, item_id, title, author, genre):
-        ebook = EBookItem(item_id, title, author, genre)
-        self.catalog.add(ebook)
-        return ebook
+        Under the hood, BookItem.__init__ validates the ID and
+        appends a record to lib.catalog.
+        """
+        return BookItem(item_id, title, author, genre, copies_total=copies_total)
 
-    def add_dvd(self, item_id, title, author, genre):
-        dvd = DVDItem(item_id, title, author, genre)
-        self.catalog.add(dvd)
-        return dvd
+    def add_ebook(
+        self,
+        item_id: str,
+        title: str,
+        author: str,
+        genre: str,
+        copies_total: int = 1,
+    ) -> EBookItem:
+        """Create an e-book item and register it in the global catalog."""
+        return EBookItem(item_id, title, author, genre, copies_total=copies_total)
 
-    # --------------------------
-    # Delegate to existing P1 functions
-    # --------------------------
-    def reserve(self, member_id, item_id):
-        return lf.reserve_book(member_id, item_id)
+    def add_dvd(
+        self,
+        item_id: str,
+        title: str,
+        author: str,
+        genre: str,
+        copies_total: int = 1,
+    ) -> DVDItem:
+        """Create a DVD item and register it in the global catalog."""
+        return DVDItem(item_id, title, author, genre, copies_total=copies_total)
 
-    def search_catalog(self, *args, **kwargs):
-        return lf.search_catalog(*args, **kwargs)
+    # ---------------------------
+    # Member creation
+    # ---------------------------
+    def add_member(self, member_id: str, name: str, email: str) -> Member:
+        """
+        Create a Member object and register it in the global members dict.
 
-    # Example polymorphic usage
-    def get_due_date(self, item_id, checkout_date: date):
-        item = self.catalog.get(item_id)
-        if item:
-            return item.due_date_for(checkout_date)
-        return None
+        This assumes your Member.__init__ either:
+        - adds itself to lib.members, OR
+        - you manually do that after constructing it.
+        """
+        m = Member(member_id, name, email)
+        # If your Member doesn't auto-register, you could do:
+        # lib.members[member_id] = {"name": name, "email": email, "active": True}
+        return m
+
+    # ---------------------------
+    # Loan creation helper
+    # ---------------------------
+    def create_loan(
+        self,
+        member_id: str,
+        item_id: str,
+        borrow_date: datetime | None = None,
+        loan_days: int | None = None,
+    ) -> Loan:
+        """
+        Convenience wrapper to create a Loan object.
+
+        This delegates to your Loan class, which should handle:
+        - computing due date (maybe using calculate_due_date or loan period)
+        - updating lib.loans or whatever structure you're using
+        """
+        if borrow_date is None:
+            borrow_date = datetime.now()
+
+        return Loan(member_id, item_id, borrow_date=borrow_date, loan_days=loan_days)
+
+    """
+    # ---------------------------
+    # Convenience wrappers to Search / function library
+    # ---------------------------
+    def search_catalog(self, query: str = "", author: str = "", genre: str = "", available: bool | None = None):
+        # Thin wrapper around the Search controller.
+        return self.search.find_books(query=query, author=author, genre=genre, available=available)
+
+    def reserve_item(self, member_id: str, item_id: str) -> str:
+        # Reserve an item for a member (delegates to library_functions).
+        return lib.reserve_book(member_id, item_id)
+
+    def rate_item(self, member_id: str, item_id: str, rating: int) -> str:
+        # Rate an item (delegates to library_functions.rate_book).
+        return lib.rate_book(member_id, item_id, rating) """
+
+    def __str__(self) -> str:
+        return (
+            f"LibrarySystem — {len(self.catalog)} items, "
+            f"{len(self.members)} members, "
+            f"{len(self.loans)} loans."
+        )

@@ -18,13 +18,13 @@ class Search:
         """Search the catalog for books."""
         return lib.search_catalog(query, author, genre, available)
 
-    def reserve(self, member_id: str, book_id: str):
+    def reserve(self, member_id: str, item_id: str):
         """Reserve a book or add user to the waitlist."""
-        return lib.reserve_book(member_id, book_id)
+        return lib.reserve_book(member_id, item_id)
 
-    def manage_waitlist(self, book_id: str, member_id: str, action="add"):
+    def manage_waitlist(self, item_id: str, member_id: str, action="add"):
         """Add or notify members on waitlist."""
-        return lib.waitlist_management(book_id, member_id, action)
+        return lib.waitlist_management(item_id, member_id, action)
 
     def recommend_for_member(self, member_id: str, limit: int = 10):
         """Recommend books using Project 1 algorithm."""

@@ -19,10 +19,10 @@ sys.path.insert(0, project_root)
 sys.path.insert(0, os.path.join(project_root, "src"))
 
 # Import the main classes and global data
-from src.book_class import Book
-from src.member_class import Member
-from src.search_class import Search
-from src.loan_class import Loan
+from src.class_lib_items import BookItem, EBookItem, DVDItem
+from src.class_member import Member
+from src.class_search import Search
+from src.class_loan import Loan
 from src import library_functions as lib
 
 
@@ -75,7 +75,7 @@ def demo_books_and_members():
     print()
 
     print("adding new book and member...\n")
-    new_book = Book("1000000010", "Artificial Intelligence: A Modern Approach",
+    new_book = BookItem("1000000010", "Artificial Intelligence: A Modern Approach",
                     "Russell & Norvig", "Computer Science", copies_total=5)
     new_member = Member("M100", "Jane Doe", "jane@example.com")
 
@@ -122,7 +122,7 @@ def demo_loans_and_reports():
     """Demonstrate loan creation, overdue checks, and reporting."""
     print("LOAN & REPORT DEMO")
     print("=" * 50)
-    l = Loan(member_id="M1", book_id="1000000003")  # Matthew borrows The Hobbit
+    l = Loan(member_id="M1", item_id="1000000003")  # Matthew borrows The Hobbit
     print("Loan record created:", l)
 
     print("Is loan overdue?", l.is_overdue())

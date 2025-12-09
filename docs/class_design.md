@@ -15,7 +15,7 @@ Each class interacts with these structures to ensure all operations are synchron
 
 | Class | Primary Role | Interacts With |
 |:------|:--------------|:----------------|
-| **Book** | Represents a single library item and manages copies, metadata, and ratings | `catalog`, `ratings`, `average_ratings` |
+| **Item** | Represents a single library item and manages copies, metadata, and ratings | `catalog`, `ratings`, `average_ratings` |
 | **Member** | Represents a library user with balance, preferences, and loan records | `members` |
 | **Search** | Handles catalog lookups, recommendations, and waitlist operations | `catalog`, `members`, `waitlists`, `reservations` |
 | **Loan** | Manages borrowing activity and overdue calculations | `loans` |

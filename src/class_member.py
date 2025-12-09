@@ -58,15 +58,15 @@ class Member:
         """Validate member account using user_account()."""
         return lib.user_account(action="validate", user_id=self._member_id)
 
-    def borrow_book(self, book_id: str):
+    def borrow_book(self, item_id: str):
         """Borrow a book."""
-        result = lib.check_in_out_operations(self._member_id, book_id, action="borrow")
-        return f"{self._name} borrowed {book_id}, due {result['due_at'].date()}"
+        result = lib.check_in_out_operations(self._member_id, item_id, action="borrow")
+        return f"{self._name} borrowed {item_id}, due {result['due_at'].date()}"
 
-    def return_book(self, book_id: str):
+    def return_book(self, item_id: str):
         """Return a borrowed book."""
-        result = lib.check_in_out_operations(self._member_id, book_id, action="return")
-        return f"{self._name} returned {book_id} on {result['returned_at'].date()}"
+        result = lib.check_in_out_operations(self._member_id, item_id, action="return")
+        return f"{self._name} returned {item_id} on {result['returned_at'].date()}"
 
     def pay_balance(self, amount):
         """Pay a fine or balance using user_account()."""

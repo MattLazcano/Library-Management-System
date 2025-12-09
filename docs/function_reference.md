@@ -51,12 +51,12 @@ available = is_book_available("Dune")
 print(available)  # True if Dune has copies_available > 0
 ```
 
-### schedule_reminder(member_id, book_id, due_date)
+### schedule_reminder(member_id, item_id, due_date)
 
 **Purpose:** Schedule a reminder message for a member’s borrowed book.  
 **Parameters:**
 - `member_id` (str): The member’s ID.
-- `book_id` (str): The book’s ID.
+- `item_id` (str): The book’s ID.
 - `due_date` (datetime): The due date for the borrowed item.  
 **Returns:** `bool` — True if reminder was added successfully.
 
@@ -132,12 +132,12 @@ for r in results:
     print(r["title"], "-", r["author"])
 ```
 
-### reserve_book(member_id, book_id)
+### reserve_book(member_id, item_id)
 
 **Purpose:** Reserve a book for a member or add them to the waitlist if unavailable.  
 **Parameters:**
 - `member_id` (str): The member’s ID.
-- `book_id` (str): The book’s ID.  
+- `item_id` (str): The book’s ID.  
 **Returns:** str — Confirmation message.
 
 **Example Usage:**
@@ -164,12 +164,12 @@ print(waitlist_management("1000000001", "M4", "notify"))
 
 ## Ratings and Validation Functions
 
-### rate_book(member_id, book_id, rating)
+### rate_book(member_id, item_id, rating)
 
 **Purpose:** Record and calculate average book ratings.  
 **Parameters:**
 - `member_id` (str)
-- `book_id` (str)
+- `item_id` (str)
 - `rating` (int, 1–5)  
 **Returns:** str — Message confirming update and average.
 
@@ -287,7 +287,7 @@ user_account(action="pay", user_id="M1", pay_amount=5.00)
 **Parameters:**
 - `member_id` (str): Member ID to recommend for.
 - `limit` (int): Maximum number of results (default 10).  
-**Returns:** `list[tuple]` — List of `(book_id, score)` ranked by recommendation strength.
+**Returns:** `list[tuple]` — List of `(item_id, score)` ranked by recommendation strength.
 
 **Example Usage:**
 ```python

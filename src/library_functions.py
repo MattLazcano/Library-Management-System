@@ -7,14 +7,14 @@ from decimal import Decimal, ROUND_HALF_UP
 # -------------------------------------
 # Global Data Structures
 # -------------------------------------
-catalog = []         # list of {"id","title","author","genre","copies_total","copies_available"}
+catalog = []         # list of {"id","title","author","genre","media_type", "tags", "copies_total","copies_available"}
 members = {}         # dict of member_id: {"name","email","phone"}
-reminders = []       # list of {"member_id","book_id","due_date", "message"}
-loans = []           # list of {"member_id","book_id","loan_date","due_date","returned": bool}
-reservations = {}    # member_id -> list of book_ids
-waitlists = {}       # book_id   -> list of member_ids
-ratings = {}         # book_id -> {member_id: rating}
-average_ratings = {} # book_id -> average_rating
+reminders = []       # list of {"member_id","item_id","due_date", "message"}
+loans = []           # list of {"member_id","item_id","loan_date","due_date","returned": bool}
+reservations = {}    # member_id -> list of item_ids
+waitlists = {}       # item_id   -> list of member_ids
+ratings = {}         # item_id -> {member_id: rating}
+average_ratings = {} # item_id -> average_rating
 
 
 # ----------------------------------------------------
@@ -31,10 +31,10 @@ def is_book_available(title):
 # ----------------------------------------------------
 # SIMPLE function (5-10 lines) Reminder Scheduling (Matthew)
 # ----------------------------------------------------
-def schedule_reminder(member_id, book_id, due_date):
-    if member_id in members and any(b["id"] == book_id for b in catalog):
-        message = f"Reminder: Book ID {book_id} is due on {due_date}."
-        reminders.append({"member_id": member_id, "book_id": book_id, "due_date": due_date, "message": message})
+def schedule_reminder(member_id, item_id, due_date):
+    if member_id in members and any(b["id"] == item_id for b in catalog):
+        message = f"Reminder: Item ID {item_id} is due on {due_date}."
+        reminders.append({"member_id": member_id, "item_id": item_id, "due_date": due_date, "message": message})
         return True
     return False
 
@@ -82,10 +82,10 @@ def automated_overdue_notifications(today: datetime | None = None, daily_fee: fl
 
         book = None
         for b in catalog:
-            if b["id"] == loan["book_id"]:
+            if b["id"] == loan["item_id"]:
                 book = b
                 break
-        title = book.get("title","Unknown Title") if book else str(loan["book_id"])
+        title = book.get("title","Unknown Title") if book else str(loan["item_id"])
 
         member = members.get(loan["member_id"], {"name": "Member"})
         member_id = loan["member_id"]
@@ -113,102 +113,105 @@ def automated_overdue_notifications(today: datetime | None = None, daily_fee: fl
 # ----------------------------------------------------
 # SIMPLE function (5-10 lines) RESERVE BOOK (ABI)
 # ----------------------------------------------------
-def reserve_book(member_id: str, book_id: str) -> str:
+def reserve_book(member_id: str, item_id: str) -> str:
     book = None
     for item in catalog:
-        if item["id"] == book_id:
+        if item["id"] == item_id:
             book = item
             break
     if book is None:
-        return f"Book '{book_id}' not found in catalog."
+        return f"Book '{item_id}' not found in catalog."
 
     if member_id not in reservations:
         reservations[member_id] = []
 
-    if book_id in reservations[member_id]:
-        return f"You have already reserved book '{book_id}'."
+    if item_id in reservations[member_id]:
+        return f"You have already reserved book '{item_id}'."
 
     copies_left = int(book.get("copies_available", 0))
     if copies_left > 0:
-        reservations[member_id].append(book_id)
+        reservations[member_id].append(item_id)
         book["copies_available"] = copies_left - 1
-        return f"Book '{book_id}' reserved for member '{member_id}'."
+        return f"Book '{item_id}' reserved for member '{member_id}'."
 
-    if book_id not in waitlists:
-        waitlists[book_id] = []
-    if member_id in waitlists[book_id]:
-        return f"You are already on the waitlist for book '{book_id}'."
+    if item_id not in waitlists:
+        waitlists[item_id] = []
+    if member_id in waitlists[item_id]:
+        return f"You are already on the waitlist for book '{item_id}'."
 
-    waitlists[book_id].append(member_id)
-    return f"No copies available. Member '{member_id}' added to the waitlist for '{book_id}'."
+    waitlists[item_id].append(member_id)
+    return f"No copies available. Member '{member_id}' added to the waitlist for '{item_id}'."
 
 
 # ----------------------------------------------------
 # SIMPLE function (5-10 lines) Book Rating System (ABI)
 # ----------------------------------------------------
-def rate_book(member_id, book_id, rating):
+def rate_book(member_id, item_id, rating):
     if rating < 1 or rating > 5:
         raise ValueError("Rating must be between 1 and 5 stars.")
 
-    if book_id not in ratings:
-        ratings[book_id] = {}
+    if item_id not in ratings:
+        ratings[item_id] = {}
 
     has_previous_rating = False
-    if member_id in ratings[book_id]:
+    if member_id in ratings[item_id]:
         has_previous_rating = True
 
-    ratings[book_id][member_id] = rating
+    ratings[item_id][member_id] = rating
 
-    rating_values = [user_rating for user_rating in ratings[book_id].values()]
+    rating_values = [user_rating for user_rating in ratings[item_id].values()]
     total_ratings = len(rating_values)
     sum_of_ratings = sum(rating_values)
     new_average = round(sum_of_ratings / total_ratings, 2)
-    average_ratings[book_id] = new_average
+    average_ratings[item_id] = new_average
 
     if has_previous_rating:
-        message = f"Updated rating for book '{book_id}' to {rating} stars. New average: {new_average}"
+        message = f"Updated rating for book '{item_id}' to {rating} stars. New average: {new_average}"
     else:
-        message = f"Rated book '{book_id}' with {rating} stars. Average now: {new_average}"
+        message = f"Rated book '{item_id}' with {rating} stars. Average now: {new_average}"
 
     return message
 
 
 # ----------------------------------------------------
-# MEDIUM (15–25 lines) Validate ISBN (ABI)
+# MEDIUM (15–25 lines) Validate item id (ABI)
 # ----------------------------------------------------
-def validate_code(code_input):
-    if not isinstance(code_input, str):
+def validate_code(item_id: str) -> bool:
+    """
+    Validates library item codes.
+    Acceptable formats:
+        BK###  Books
+        EB###  E-Books
+        DV###  DVDs
+
+    Must be:
+        - Exactly 5 characters long
+        - Prefix is BK, EB, or DV
+        - Followed by 3 digits
+    """
+
+    if not isinstance(item_id, str):
         raise TypeError("Code must be a string.")
-    cleaned_code = code_input.replace("-", "").replace(" ", "").upper()
-    code_length = len(cleaned_code)
 
-    # Treat numeric-only 10- or 13-digit codes as ISBNs only if they start with 0 or 9 (common ISBN prefixes)
-    if code_length == 10 and cleaned_code[0] in "09":
-        return validate_isbn10_format(cleaned_code)
-    elif code_length == 13 and cleaned_code[0] in "09":
-        return validate_isbn13_format(cleaned_code)
-    elif 5 <= code_length <= 20:
-        return cleaned_code.isalnum()
-    return False
+    code = item_id.strip().upper()
 
+    # Must be exactly 5 characters
+    if len(code) != 5:
+        return False
 
-def validate_isbn10_format(isbn_code):
-    checksum = 0
-    position = 10
-    for char in isbn_code:
-        digit_value = 10 if char == 'X' else int(char)
-        checksum += digit_value * position
-        position -= 1
-    return checksum % 11 == 0
+    prefix = code[:2]
+    digits = code[2:]
 
+    # Prefix must be valid
+    if prefix not in {"BK", "EB", "DV"}:
+        return False
 
-def validate_isbn13_format(isbn_code):
-    total_sum = 0
-    for index in range(len(isbn_code)):
-        current_digit = int(isbn_code[index])
-        weight = 1 if index % 2 == 0 else 3
-        total_sum += current_digit * weight
-    return total_sum % 10 == 0
+    # Must end with 3 digits
+    if not digits.isdigit():
+        return False
+
+    return True
+
 
 
 # ----------------------------------------------------
@@ -225,8 +228,8 @@ def generate_borrowing_report(fine_per_day=0.5):
 
     for record in loans:
         user_id = record.get("user_id") or record.get("member_id")
-        book_id = record.get("book_id")
-        if not user_id or not book_id:
+        item_id = record.get("item_id")
+        if not user_id or not item_id:
             continue
 
         borrowed_on = None
@@ -244,7 +247,7 @@ def generate_borrowing_report(fine_per_day=0.5):
         returned_on_str = record.get("return_date")
 
         users[user_id]["borrowed"] += 1
-        book_counts[book_id] += 1
+        book_counts[item_id] += 1
 
         if returned_on_str is not None:
             returned_on = datetime.strptime(returned_on_str, "%Y-%m-%d") if isinstance(returned_on_str, str) else returned_on_str
@@ -344,7 +347,7 @@ def member_count(active_only: bool = True) -> int:
 # MEDIUM (15–25 lines) check in/ check out operations (Kaliza)
 # Used to track exact borrow and return times
 # ----------------------------------------------------
-def check_in_out_operations(user_id: str, isbn: str, action: str = "borrow", loan_days: int = 14) -> dict:
+def check_in_out_operations(user_id: str, item_id: str, action: str = "borrow", loan_days: int = 14) -> dict:
     """Manage check-in and check-out operations for library books."""
     
     users = members
@@ -356,11 +359,11 @@ def check_in_out_operations(user_id: str, isbn: str, action: str = "borrow", loa
 
     book = None
     for item in catalog_list:
-        if item.get("id") == isbn:
+        if item.get("id") == item_id:
             book = item
             break
     if book is None:
-        raise KeyError(f"Book {isbn} not found")
+        raise KeyError(f"Book {item_id} not found")
     # makes sure the book exists in the catalog
 
     user = users[user_id]
@@ -372,24 +375,24 @@ def check_in_out_operations(user_id: str, isbn: str, action: str = "borrow", loa
         book["copies_available"] -= 1
 
         loans = user.setdefault("loans", {})
-        if isbn in loans and loans[isbn].get("returned_at") is None:
+        if item_id in loans and loans[item_id].get("returned_at") is None:
             raise ValueError("This book is already borrowed and not yet returned.")
 
         borrowed_at = datetime.now(timezone.utc)
         due_at = calculate_due_date(borrowed_at, loan_days)
-        loans[isbn] = {"borrowed_at": borrowed_at, "due_at": due_at, "returned_at": None}
+        loans[item_id] = {"borrowed_at": borrowed_at, "due_at": due_at, "returned_at": None}
 
-        return {"user": user_id, "book": isbn, "status": "borrowed", "due_at": due_at}
+        return {"user": user_id, "book": item_id, "status": "borrowed", "due_at": due_at}
 
     elif action == "return":
         loans = user.get("loans", {})
-        if isbn not in loans or loans[isbn].get("returned_at"):
+        if item_id not in loans or loans[item_id].get("returned_at"):
             raise ValueError("Book not currently borrowed or already returned.")
 
         book["copies_available"] = book.get("copies_available", 0) + 1
-        loans[isbn]["returned_at"] = datetime.now(timezone.utc)
+        loans[item_id]["returned_at"] = datetime.now(timezone.utc)
 
-        return {"user": user_id, "book": isbn, "status": "returned", "returned_at": loans[isbn]["returned_at"]}
+        return {"user": user_id, "book": item_id, "status": "returned", "returned_at": loans[item_id]["returned_at"]}
 
     else:
         raise ValueError("Invalid action. Use 'borrow' or 'return'.")
@@ -399,16 +402,16 @@ def check_in_out_operations(user_id: str, isbn: str, action: str = "borrow", loa
 # MEDIUM (15–25 lines) Waitlist Management (Kaliza)
 # Add users to waitlist when a book is unavailable and notify them when available
 # ----------------------------------------------------
-def waitlist_management(isbn: str, user_id: str, action: str = "add") -> dict:
+def waitlist_management(item_id: str, user_id: str, action: str = "add") -> dict:
     """Manage a book's waitlist for unavailable items."""
     
     book = None
     for item in catalog:
-        if item.get("id") == isbn:
+        if item.get("id") == item_id:
             book = item
             break
     if book is None:
-        raise KeyError(f"Book {isbn} not found in catalog.")
+        raise KeyError(f"Book {item_id} not found in catalog.")
     if user_id not in members:
         raise KeyError(f"User {user_id} not found.")
 
@@ -418,17 +421,17 @@ def waitlist_management(isbn: str, user_id: str, action: str = "add") -> dict:
         if book.get("copies_available", 0) > 0:
             return {"message": f"Book '{book.get('title', 'Unknown')}' is available; no need for waitlist."}
         if user_id in waitlist:
-            return {"message": f"User {user_id} is already on the waitlist for {isbn}."}
+            return {"message": f"User {user_id} is already on the waitlist for {item_id}."}
 
         waitlist.append(user_id)
-        return {"isbn": isbn, "waitlist": waitlist}
+        return {"item_id": item_id, "waitlist": waitlist}
 
     elif action == "notify":
         if not waitlist:
-            return {"message": f"No users on the waitlist for {isbn}."}
+            return {"message": f"No users on the waitlist for {item_id}."}
         next_user = waitlist.pop(0)
         return {
-            "isbn": isbn,
+            "item_id": item_id,
             "notify_user": next_user,
             "message": f"Notify {next_user}: '{book.get('title', 'Unknown')}' is now available."
         }
@@ -473,7 +476,7 @@ def user_account(
     *,
     action,
     user_id=None,
-    isbn=None,
+    item_id=None,
     loan_days=14,
     daily_rate=Decimal("0.25"),
     grace_days=0,
@@ -506,28 +509,28 @@ def user_account(
 
     if action == "borrow":
         u = users.get(user_id)
-        b = catalog_dict.get(isbn)
+        b = catalog_dict.get(item_id)
         if not u or not b:
             raise KeyError("User or book not found")
         user_account(action="validate", user_obj=u)
         if b.get("copies_available", 0) <= 0:
             raise ValueError("No copies")
         loans = u.setdefault("loans", {})
-        if isbn in loans and loans[isbn].get("returned_at") is None:
+        if item_id in loans and loans[item_id].get("returned_at") is None:
             raise ValueError("Already borrowed")
         now = datetime.now(timezone.utc)
         due = now + timedelta(days=loan_days)
         b["copies_available"] = int(b.get("copies_available", 0)) - 1
-        loans[isbn] = {"borrowed_at": now, "due_at": due, "returned_at": None}
-        return loans[isbn]
+        loans[item_id] = {"borrowed_at": now, "due_at": due, "returned_at": None}
+        return loans[item_id]
 
     if action == "return":
         u = users.get(user_id)
-        b = catalog_dict.get(isbn)
+        b = catalog_dict.get(item_id)
         if not u:
             raise KeyError("User not found")
         loans = u.setdefault("loans", {})
-        loan = loans.get(isbn)
+        loan = loans.get(item_id)
         if not loan or loan.get("returned_at") is not None:
             raise KeyError("No active loan")
         now = datetime.now(timezone.utc)
@@ -542,7 +545,7 @@ def user_account(
         if b is not None:
             b["copies_available"] = int(b.get("copies_available", 0)) + 1
         return {
-            "isbn": isbn,
+            "item_id": item_id,
             "returned_at": now,
             "days_late": max(0, days_late),
             "effective_late": effective_late,
@@ -577,7 +580,7 @@ def recommend_books(*, member_id, limit=10):
         - Authors the user likes
         - Tags from books the user borrowed before
         - Prefer books that are in stock
-    Returns a list of (isbn, score), highest score first.
+    Returns a list of (item_id, score), highest score first.
     """
     catalog_dict = {b.get("id"): b for b in catalog}
     user = members.get(member_id, {})
@@ -586,13 +589,13 @@ def recommend_books(*, member_id, limit=10):
     prefs_authors = set(user.get("preferences_authors", set()))
     member_loans_dict = user.get("loans", {}) or {}
 
-    borrowed_isbns = set(member_loans_dict.keys())
-    if not borrowed_isbns:
-        borrowed_isbns = {ln["book_id"] for ln in loans if ln.get("member_id") == member_id}
+    borrowed_item_ids = set(member_loans_dict.keys())
+    if not borrowed_item_ids:
+        borrowed_item_ids = {ln["item_id"] for ln in loans if ln.get("member_id") == member_id}
 
     history_tag_counts = {}
-    for isbn in borrowed_isbns:
-        b = catalog_dict.get(isbn)
+    for item_id in borrowed_item_ids:
+        b = catalog_dict.get(item_id)
         if not b:
             continue
         for t in set(b.get("tags", set())):
@@ -606,7 +609,7 @@ def recommend_books(*, member_id, limit=10):
         score = float(tag_matches)
         if author in prefs_authors:
             score += 1.5
-        if author and any((catalog_dict.get(i) or {}).get("author") == author for i in borrowed_isbns):
+        if author and any((catalog_dict.get(i) or {}).get("author") == author for i in borrowed_item_ids):
             score += 0.5
         if qty and qty > 0:
             score += 0.3
@@ -615,12 +618,12 @@ def recommend_books(*, member_id, limit=10):
         return score
 
     scored = []
-    for isbn, b in catalog_dict.items():
-        if isbn in borrowed_isbns:
+    for item_id, b in catalog_dict.items():
+        if item_id in borrowed_item_ids:
             continue
         s = score_book(b)
         if s > 0:
-            scored.append((isbn, s))
+            scored.append((item_id, s))
 
     scored.sort(
         key=lambda item: (item[1], (catalog_dict[item[0]].get("title") or ""), item[0]),
