@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from src import library_functions as lib
+import library_functions as lib
 from class_lib_items import BookItem, EBookItem, DVDItem
 from class_member import Member
 from class_search import Search
@@ -87,6 +87,44 @@ class LibrarySystem:
         # lib.members[member_id] = {"name": name, "email": email, "active": True}
         return m
 
+    # ---------------------------
+    # Borrow / Return
+    # ---------------------------
+    def borrow_item(self, member_id: str, item_id: str, loan_days: int = 14) -> str:
+        """
+        High-level helper to borrow an item through the system.
+
+        Mirrors Member.borrow_book but calls the shared check_in_out_operations
+        directly, using the global members dict for the member's name.
+        """
+        if member_id not in lib.members:
+            raise KeyError(f"Member {member_id} not found")
+
+        member_name = lib.members[member_id].get("name", "Member")
+        result = lib.check_in_out_operations(
+            member_id,
+            item_id,
+            action="borrow",
+            loan_days=loan_days,
+        )
+        return f"{member_name} borrowed {item_id}, due {result['due_at'].date()}"
+
+    def return_item(self, member_id: str, item_id: str) -> str:
+        """
+        High-level helper to return an item through the system.
+
+        Mirrors Member.return_book but uses the shared function directly.
+        """
+        if member_id not in lib.members:
+            raise KeyError(f"Member {member_id} not found")
+
+        member_name = lib.members[member_id].get("name", "Member")
+        result = lib.check_in_out_operations(
+            member_id,
+            item_id,
+            action="return",
+        )
+        return f"{member_name} returned {item_id} on {result['returned_at'].date()}"
     # ---------------------------
     # Loan creation helper
     # ---------------------------

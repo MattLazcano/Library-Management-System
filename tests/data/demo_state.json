@@ -7,8 +7,8 @@
       "genre": "sci-fi",
       "media_type": "Book",
       "tags": [
-        "sci-fi",
         "space",
+        "sci-fi",
         "classic"
       ],
       "copies_total": 3,
@@ -25,9 +25,9 @@
       "genre": "programming",
       "media_type": "Book",
       "tags": [
+        "programming",
         "software",
-        "best-practices",
-        "programming"
+        "best-practices"
       ],
       "copies_total": 2,
       "copies_available": 0,
@@ -38,14 +38,14 @@
       ]
     },
     {
-      "id": "BK103",
+      "id": "EB103",
       "title": "The Hobbit",
       "author": "J.R.R. Tolkien",
       "genre": "fantasy",
-      "media_type": "Book",
+      "media_type": "Ebook",
       "tags": [
-        "fantasy",
         "adventure",
+        "fantasy",
         "classic"
       ],
       "copies_total": 4,
@@ -60,8 +60,8 @@
       "media_type": "Book",
       "tags": [
         "programming",
-        "craft",
-        "career"
+        "career",
+        "craft"
       ],
       "copies_total": 3,
       "copies_available": 1,
@@ -74,9 +74,9 @@
       "genre": "fiction",
       "media_type": "Book",
       "tags": [
+        "literature",
         "classic",
-        "fiction",
-        "literature"
+        "fiction"
       ],
       "copies_total": 2,
       "copies_available": 2,
@@ -89,9 +89,9 @@
       "genre": "fiction",
       "media_type": "Book",
       "tags": [
-        "classic",
         "political",
-        "dystopia"
+        "dystopia",
+        "classic"
       ],
       "copies_total": 5,
       "copies_available": 3,
@@ -138,8 +138,8 @@
       "active": true,
       "balance": 0.0,
       "preferences_tags": [
-        "sci-fi",
-        "fantasy"
+        "fantasy",
+        "sci-fi"
       ],
       "preferences_authors": [
         "Frank Herbert"
@@ -151,7 +151,13 @@
       "email": "rood@example.com",
       "active": true,
       "balance": 0.0,
-      "loans": {}
+      "loans": {
+        "EB103": {
+          "borrowed_at": "2025-12-11T19:36:52.937949+00:00",
+          "due_at": "2025-12-31T19:36:52.937949+00:00",
+          "returned_at": "2025-12-11T19:36:52.938250+00:00"
+        }
+      }
     },
     "M3": {
       "name": "Kaliza",
@@ -174,7 +180,7 @@
       "balance": 0.0,
       "loans": {}
     },
-    "M100": {
+    "M6": {
       "name": "Jane Doe",
       "email": "jane@example.com",
       "active": true,
@@ -186,11 +192,12 @@
   },
   "loans": [
     {
-      "member_id": "M1",
-      "item_id": "BK103",
-      "borrow_date": "2025-12-10T23:53:56.963181",
-      "due_date": "2025-12-05T23:53:56.964702",
-      "returned": false
+      "member_id": "M2",
+      "item_id": "EB103",
+      "borrow_date": "2025-12-11T19:36:52.937949+00:00",
+      "due_date": "2025-12-31T19:36:52.937949+00:00",
+      "returned": true,
+      "return_date": "2025-12-11T19:36:52.938250+00:00"
     }
   ],
   "reminders": [],

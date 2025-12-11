@@ -69,11 +69,11 @@ def setup_sample_data():
             "waitlist": ["M3", "M5"],
         },
         {
-            "id": "BK103",
+            "id": "EB103",
             "title": "The Hobbit",
             "author": "J.R.R. Tolkien",
             "genre": "fantasy",
-            "media_type": "Book",
+            "media_type": "Ebook",
             "tags": {"fantasy", "adventure", "classic"},
             "copies_total": 4,
             "copies_available": 2,
@@ -163,8 +163,8 @@ def setup_sample_data():
 # ------------------------------------------------------------
 # DEMO SECTIONS
 # ------------------------------------------------------------
-def demo_items_and_members():
-    """Demonstrate creation and basic validation of LibraryItem subclasses and Member."""
+def demo_items_and_members(system: LibrarySystem):
+    """Demonstrate creation and validation of LibraryItem subclasses and Members via the facade."""
     print("ITEM & MEMBER DEMO")
     print("=" * 50)
 
@@ -172,37 +172,42 @@ def demo_items_and_members():
     print("Member count before:", len(lib.members))
     print()
 
-    print("Adding new items and member via classes...\n")
-    new_book = BookItem(
+    print("Adding new items and member via LibrarySystem facade...\n")
+    new_book = system.add_book(
         "BK110",
         "Artificial Intelligence: A Modern Approach",
         "Russell & Norvig",
         "computer science",
         copies_total=5,
     )
-    new_ebook = EBookItem("EB200", "Python Tricks", "Dan Bader", "programming", copies_total=2)
-    new_dvd = DVDItem("DV300", "The Matrix", "Wachowski", "sci-fi", copies_total=1)
-    new_member = Member("M100", "Jane Doe", "jane@example.com")
+    new_ebook = system.add_ebook(
+        "EB200", "Python Tricks", "Dan Bader", "programming", copies_total=2
+    )
+    new_dvd = system.add_dvd(
+        "DV300", "The Matrix", "Wachowski", "sci-fi", copies_total=1
+    )
+    new_member = system.add_member("M6", "Jane Doe", "jane@example.com")
 
     print(f"Added item: {new_book}")
     print(f"Added item: {new_ebook}")
     print(f"Added item: {new_dvd}")
     print(f"Added member: {new_member}\n")
 
-    print("Catalog after:", [b["id"] + ' - ' + b["title"] for b in lib.catalog])
+    print("Catalog after:", [f'{b["id"]} - {b["title"]}' for b in lib.catalog])
     print("Member count after:", len(lib.members))
     print()
 
-    print("Validating one of the new member accounts via user_account():")
-    print("  validate_account(M100) ->", new_member.validate_account())
+    print("Validating one of the new member accounts via Member.validate_account():")
+    print("  validate_account(M6) ->", new_member.validate_account())
     print()
 
 
-def demo_search_and_reservations():
-    """Showcase searching, reserving, waitlists, query normalization, and recommendations."""
+def demo_search_and_reservations(system: LibrarySystem):
+    """Showcase searching, reserving, waitlists, query normalization, and recommendations via LibrarySystem.search."""
     print("SEARCH & RESERVATION DEMO")
     print("=" * 50)
-    s = Search()
+
+    s: Search = system.search
 
     print("\nSearch results for keyword 'code':")
     results = s.find_books(query="code")
@@ -225,31 +230,39 @@ def demo_search_and_reservations():
     print()
 
 
-def demo_loans_and_reports():
-    """Demonstrate loan creation, overdue checks, and borrowing reports."""
+def demo_loans_and_reports(system: LibrarySystem):
+    """Demonstrate borrowing and returning using existing members/books and show reports."""
     print("LOAN & REPORT DEMO")
     print("=" * 50)
 
-    # Member M1 borrows The Hobbit (BK103)
-    loan = Loan(member_id="M1", item_id="BK103")
-    print("Loan record created:", loan)
-    print("Is loan overdue right now?", loan.is_overdue())
+    # Before borrowing
+    rec = next(r for r in lib.catalog if r["id"] == "EB103")
+    print(f"Before borrowing, copies_available for {"EB103"}: {rec['copies_available']}")
 
-    print("\nBorrowing report after one loan:")
-    print(lib.generate_borrowing_report())
+    # Borrow EBOOK
+    print(f"\nBorrowing {"EB103"} via system.borrow_item('{"M2"}', '{"EB103"}'):")
+    borrow_msg = system.borrow_item("M2", "EB103")
+    print("  ", borrow_msg)
 
-    # Make that loan overdue by editing the stored loan record
-    # (This simulates time passing for demo purposes.)
-    if lib.loans:
-        lib.loans[0]["due_date"] = datetime.now() - timedelta(days=5)
+    rec = next(r for r in lib.catalog if r["id"] == "EB103")
+    print(f"After borrowing, copies_available for {"EB103"}: {rec['copies_available']}")
 
-    print("\nOverdue notifications after simulating an overdue loan:")
-    print(Loan.overdue_notifications())
+    # Return EBOOK
+    print(f"\nReturning {"EB103"} via system.return_item('{"M2"}', '{"EB103"}'):")
+    return_msg = system.return_item("M2", "EB103")
+    print("  ", return_msg)
+
+    rec = next(r for r in lib.catalog if r["id"] == "EB103")
+    print(f"After returning, copies_available for {"EB103"}: {rec['copies_available']}")
+
+    # Show borrowing report
+    print("\nBorrowing report after this cycle:")
+    report = lib.generate_borrowing_report()
+    print("  ", report)
     print()
 
-
-def demo_ratings_and_recommendations():
-    """Demonstrate book rating and how it connects with recommendations."""
+def demo_ratings_and_recommendations(system: LibrarySystem):
+    """Demonstrate rating an item and how that connects with recommendations."""
     print("RATING & RECOMMENDATION DEMO")
     print("=" * 50)
 
@@ -269,23 +282,23 @@ def demo_ratings_and_recommendations():
     print()
 
 
-def demo_library_system_and_persistence():
+def demo_library_system_and_persistence(system: LibrarySystem):
     """
     Demonstrate the LibrarySystem facade and persistence:
-    - Show current counts
+    - Show current counts via __str__
     - Save state to disk
     - Clear in-memory data
     - Reload from disk and show that it comes back
+    - Export a borrowing report to CSV
     """
     print("LIBRARYSYSTEM & PERSISTENCE DEMO")
     print("=" * 50)
 
-    system = LibrarySystem()
     print("Initial system summary:")
     print(" ", system)
 
     # Choose a path in the project root for demo persistence
-    state_path = Path(project_root) / "demo_state.json"
+    state_path = Path(project_root) / "/Users/matthewlazcano/Documents/GitHub/Group-5/tests/data/demo_state.json"
 
     print(f"\nSaving state to: {state_path}")
     persistence.save_state(state_path)
@@ -296,7 +309,7 @@ def demo_library_system_and_persistence():
     lib.loans.clear()
 
     print("\nAfter clearing globals manually:")
-    print(" ", system)  # same object, but counts now reflect cleared lists
+    print(" ", system)  # same LibrarySystem object, but backing data is now empty
 
     print("\nLoading state back from disk...")
     persistence.load_state(state_path)
@@ -304,10 +317,34 @@ def demo_library_system_and_persistence():
     print("After load_state:")
     print(" ", system)
 
-    # Optional: export a borrowing report to CSV to show export feature
-    report_csv = Path(project_root) / "demo_borrowing_report.csv"
+    # Export a borrowing report to CSV to show export feature
+    print("CSV EXPORT")
+    report_csv = Path(project_root) / "/Users/matthewlazcano/Documents/GitHub/Group-5/tests/data/demo_borrowing_report.csv"
     print(f"\nExporting borrowing report CSV to: {report_csv}")
     persistence.export_borrowing_report_csv(report_csv)
+
+    # Import catlog csv file
+    print("CSV IMPORT")
+    csv_path = Path(project_root) / "/Users/matthewlazcano/Documents/GitHub/Group-5/tests/data/sample_catalog_import.csv" 
+
+    print("\nCatalog size BEFORE import:", len(lib.catalog))
+    print(f"Importing catalog from: {csv_path}")
+
+    try:
+        imported_count = persistence.import_catalog_from_csv(csv_path)
+        print(f"Successfully imported {imported_count} new items.")
+    except Exception as e:
+        print("Import failed:", e)
+        return
+
+    print("Catalog size AFTER import:", len(lib.catalog))
+
+    # Show a preview of the last imported items
+    print("\nRecently imported items:")
+    for item in lib.catalog[-imported_count:]:
+        print(f"  {item['id']}: {item['title']} ({item['media_type']})")
+
+    print()
 
     print("\nPersistence demo complete.\n")
 
@@ -318,14 +355,17 @@ def demo_library_system_and_persistence():
 def main():
     print("LIBRARY MANAGEMENT SYSTEM - DEMO SCRIPT")
     print("=" * 60)
-    print("This demo illustrates how our classes interact with the shared global data.\n")
+    print("This demo illustrates how LibrarySystem and our classes\n"
+        "interact with the shared global data and persistence layer.\n")
+
+    system = LibrarySystem()
 
     setup_sample_data()
-    demo_items_and_members()
-    demo_search_and_reservations()
-    demo_loans_and_reports()
-    demo_ratings_and_recommendations()
-    demo_library_system_and_persistence()
+    demo_items_and_members(system)
+    demo_search_and_reservations(system)
+    demo_loans_and_reports(system)
+    demo_ratings_and_recommendations(system)
+    demo_library_system_and_persistence(system)
 
     print("=" * 60)
     print("DEMO COMPLETE! The library system is fully integrated and functional.")

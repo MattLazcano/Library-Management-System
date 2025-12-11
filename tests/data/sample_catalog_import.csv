@@ -1,0 +1,4 @@
+id,title,author,genre,media_type,copies_total,copies_available
+BK900,Deep Learning,Ian Goodfellow,AI,Book,4,4
+EB901,Python Machine Learning,Sebastian Raschka,programming,EBook,3,3
+DV902,Interstellar,Christopher Nolan,sci-fi,DVD,2,2

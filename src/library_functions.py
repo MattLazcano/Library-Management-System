@@ -223,6 +223,24 @@ def validate_code(item_id: str) -> bool:
 # ----------------------------------------------------
 # COMPLEX (30+ lines) Generating Borrowing Report (ABI)
 # ----------------------------------------------------
+def _parse_dt(value):
+    """Helper: parse many datetime formats into a datetime or return None."""
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        # Try full ISO first (handles 2025-12-10T...+00:00)
+        try:
+            return datetime.fromisoformat(value)
+        except ValueError:
+            pass
+        # Fall back to just the date part YYYY-MM-DD
+        try:
+            return datetime.strptime(value[:10], "%Y-%m-%d")
+        except ValueError:
+            return None
+    return None
+
+
 def generate_borrowing_report(fine_per_day=0.5):
     total_borrowed = len(loans)
     overdue_count = 0
@@ -230,7 +248,7 @@ def generate_borrowing_report(fine_per_day=0.5):
 
     users = defaultdict(lambda: {"borrowed": 0, "overdue": 0, "fines": 0.0})
     book_counts = Counter()
-    current_date = datetime.now(timezone.utc)
+    today = datetime.today().date()
 
     for record in loans:
         user_id = record.get("user_id") or record.get("member_id")
@@ -238,42 +256,31 @@ def generate_borrowing_report(fine_per_day=0.5):
         if not user_id or not item_id:
             continue
 
-        # --- parse due date into a datetime ---
-        due_field = record.get("due_date")
-        if isinstance(due_field, datetime):
-            due_on = due_field
-        elif isinstance(due_field, str):
-            # assume simple YYYY-MM-DD string
-            due_on = datetime.strptime(due_field, "%Y-%m-%d")
-        else:
-            # if we can't interpret due date, skip this record
+        # Parse dates robustly
+        borrowed_on = _parse_dt(record.get("borrow_date"))
+        due_on = _parse_dt(record.get("due_date"))
+
+        if not due_on:
+            # If we can't get a due date, skip this record
             continue
 
-        # --- parse returned date (if any) into a datetime ---
         returned_field = record.get("return_date") or record.get("returned_at")
+        returned_on = _parse_dt(returned_field)
 
-        if returned_field is not None:
-            if isinstance(returned_field, datetime):
-                returned_on = returned_field
-            elif isinstance(returned_field, str):
-                returned_on = datetime.strptime(returned_field, "%Y-%m-%d")
-            else:
-                # unexpected type, treat as returned on due date
-                returned_on = due_on
-        else:
-            # If no explicit return date:
+        # If no returned date but record says returned, treat as returned on due date
+        if returned_on is None:
             if record.get("returned") is True:
                 returned_on = due_on
             else:
-                # still out; treat "now" as the effective return date for fine calc
-                returned_on = current_date
-
-        # Normalize both to plain dates
-        due_date = due_on.date()
-        returned_date = returned_on.date()
+                # Still out; treat as of today for fine calculation
+                returned_on = datetime.combine(today, datetime.min.time())
 
         users[user_id]["borrowed"] += 1
         book_counts[item_id] += 1
+
+        # Work in dates to avoid naive/aware mixing issues
+        due_date = due_on.date()
+        returned_date = returned_on.date()
 
         if returned_date > due_date:
             days_late = (returned_date - due_date).days
