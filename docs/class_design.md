@@ -1,4 +1,6 @@
 # Library Management System - Class Design Documentation
+## This was for project 2 so the information will be outdated
+
 
 This document describes the architecture and relationships between the classes in the Library Management System.
 

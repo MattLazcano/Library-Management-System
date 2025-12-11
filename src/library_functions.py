@@ -12,7 +12,6 @@ members = {}         # dict of member_id: {"name","email","phone"}
 reminders = []       # list of {"member_id","item_id","due_date", "message"}
 loans = []           # list of {"member_id","item_id","loan_date","due_date","returned": bool}
 reservations = {}    # member_id -> list of item_ids
-waitlists = {}       # item_id   -> list of member_ids
 ratings = {}         # item_id -> {member_id: rating}
 average_ratings = {} # item_id -> average_rating
 
@@ -77,7 +76,8 @@ def automated_overdue_notifications(today: datetime | None = None, daily_fee: fl
         due_date = loan["due_date"]
         if not isinstance(due_date, datetime):
             continue
-        if due_date.date() >= cutoff_date:
+        due_date_only = due_date.date()
+        if due_date_only >= cutoff_date:
             continue
 
         book = None
@@ -90,7 +90,7 @@ def automated_overdue_notifications(today: datetime | None = None, daily_fee: fl
         member = members.get(loan["member_id"], {"name": "Member"})
         member_id = loan["member_id"]
 
-        days_overdue = (today - due_date).days
+        days_overdue = (today - due_date_only).days
         fee = max(0, days_overdue) * daily_fee
         total_overdue_items += 1
         notified_member_ids.add(member_id)
@@ -120,7 +120,7 @@ def reserve_book(member_id: str, item_id: str) -> str:
             book = item
             break
     if book is None:
-        return f"Book '{item_id}' not found in catalog."
+        return f"Item '{item_id}' not found in catalog."
 
     if member_id not in reservations:
         reservations[member_id] = []
@@ -129,18 +129,24 @@ def reserve_book(member_id: str, item_id: str) -> str:
         return f"You have already reserved book '{item_id}'."
 
     copies_left = int(book.get("copies_available", 0))
+
+    # Case 1: copies are available → immediate reservation
     if copies_left > 0:
         reservations[member_id].append(item_id)
         book["copies_available"] = copies_left - 1
-        return f"Book '{item_id}' reserved for member '{member_id}'."
+        return f"Item '{item_id}' reserved for member '{member_id}'."
+    
+    # Case 2: no copies available → use per-item waitlist in the catalog record
+    waitlist = book.setdefault("waitlist", [])
 
-    if item_id not in waitlists:
-        waitlists[item_id] = []
-    if member_id in waitlists[item_id]:
+    if member_id in waitlist:
         return f"You are already on the waitlist for book '{item_id}'."
 
-    waitlists[item_id].append(member_id)
-    return f"No copies available. Member '{member_id}' added to the waitlist for '{item_id}'."
+    waitlist.append(member_id)
+    return (
+        f"No copies available. Member '{member_id}' added to the waitlist "
+        f"for '{item_id}'."
+    )
 
 
 # ----------------------------------------------------
@@ -224,7 +230,7 @@ def generate_borrowing_report(fine_per_day=0.5):
 
     users = defaultdict(lambda: {"borrowed": 0, "overdue": 0, "fines": 0.0})
     book_counts = Counter()
-    current_date = datetime.today()
+    current_date = datetime.now(timezone.utc)
 
     for record in loans:
         user_id = record.get("user_id") or record.get("member_id")
@@ -232,33 +238,45 @@ def generate_borrowing_report(fine_per_day=0.5):
         if not user_id or not item_id:
             continue
 
-        borrowed_on = None
-        if isinstance(record.get("borrow_date"), str):
-            borrowed_on = datetime.strptime(record["borrow_date"], "%Y-%m-%d")
-
+        # --- parse due date into a datetime ---
         due_field = record.get("due_date")
         if isinstance(due_field, datetime):
             due_on = due_field
         elif isinstance(due_field, str):
+            # assume simple YYYY-MM-DD string
             due_on = datetime.strptime(due_field, "%Y-%m-%d")
         else:
+            # if we can't interpret due date, skip this record
             continue
 
-        returned_on_str = record.get("return_date")
+        # --- parse returned date (if any) into a datetime ---
+        returned_field = record.get("return_date") or record.get("returned_at")
+
+        if returned_field is not None:
+            if isinstance(returned_field, datetime):
+                returned_on = returned_field
+            elif isinstance(returned_field, str):
+                returned_on = datetime.strptime(returned_field, "%Y-%m-%d")
+            else:
+                # unexpected type, treat as returned on due date
+                returned_on = due_on
+        else:
+            # If no explicit return date:
+            if record.get("returned") is True:
+                returned_on = due_on
+            else:
+                # still out; treat "now" as the effective return date for fine calc
+                returned_on = current_date
+
+        # Normalize both to plain dates
+        due_date = due_on.date()
+        returned_date = returned_on.date()
 
         users[user_id]["borrowed"] += 1
         book_counts[item_id] += 1
 
-        if returned_on_str is not None:
-            returned_on = datetime.strptime(returned_on_str, "%Y-%m-%d") if isinstance(returned_on_str, str) else returned_on_str
-        else:
-            if record.get("returned") is True:
-                returned_on = due_on
-            else:
-                returned_on = current_date
-
-        if returned_on > due_on:
-            days_late = (returned_on - due_on).days
+        if returned_date > due_date:
+            days_late = (returned_date - due_date).days
             fine_amount = days_late * fine_per_day
             users[user_id]["overdue"] += 1
             users[user_id]["fines"] += fine_amount
@@ -274,7 +292,7 @@ def generate_borrowing_report(fine_per_day=0.5):
         "total_fines_collected": round(total_fines, 2),
         "user_activity": dict(users),
         "most_active_user": most_active,
-        "most_borrowed_book": top_book
+        "most_borrowed_book": top_book,
     }
     return report
 
@@ -374,25 +392,52 @@ def check_in_out_operations(user_id: str, item_id: str, action: str = "borrow", 
             raise ValueError(f"No available copies of {book.get('title', 'Unknown')}")
         book["copies_available"] -= 1
 
-        loans = user.setdefault("loans", {})
-        if item_id in loans and loans[item_id].get("returned_at") is None:
+        loans_by_user = user.setdefault("loans", {})
+        if item_id in loans_by_user and loans_by_user[item_id].get("returned_at") is None:
             raise ValueError("This book is already borrowed and not yet returned.")
 
         borrowed_at = datetime.now(timezone.utc)
         due_at = calculate_due_date(borrowed_at, loan_days)
-        loans[item_id] = {"borrowed_at": borrowed_at, "due_at": due_at, "returned_at": None}
+
+        # Store on the member
+        loans_by_user[item_id] = {
+            "borrowed_at": borrowed_at,
+            "due_at": due_at,
+            "returned_at": None
+        }
+
+        # ALSO store in the global loans list for reports/notifications
+        loans.append({
+            "member_id": user_id,
+            "item_id": item_id,
+            "borrow_date": borrowed_at,
+            "due_date": due_at,
+            "returned": False,
+        })
 
         return {"user": user_id, "book": item_id, "status": "borrowed", "due_at": due_at}
 
     elif action == "return":
-        loans = user.get("loans", {})
-        if item_id not in loans or loans[item_id].get("returned_at"):
+        loans_by_user = user.get("loans", {})
+        if item_id not in loans_by_user or loans_by_user[item_id].get("returned_at"):
             raise ValueError("Book not currently borrowed or already returned.")
 
         book["copies_available"] = book.get("copies_available", 0) + 1
-        loans[item_id]["returned_at"] = datetime.now(timezone.utc)
+        returned_at = datetime.now(timezone.utc)
+        loans_by_user[item_id]["returned_at"] = returned_at
 
-        return {"user": user_id, "book": item_id, "status": "returned", "returned_at": loans[item_id]["returned_at"]}
+        # Also mark matching global loan as returned, if present
+        for entry in loans:
+            if (
+                entry.get("member_id") == user_id
+                and entry.get("item_id") == item_id
+                and not entry.get("returned", False)
+            ):
+                entry["returned"] = True
+                entry["return_date"] = returned_at
+                break
+
+        return {"user": user_id, "book": item_id, "status": "returned", "returned_at": returned_at}
 
     else:
         raise ValueError("Invalid action. Use 'borrow' or 'return'.")
@@ -411,17 +456,23 @@ def waitlist_management(item_id: str, user_id: str, action: str = "add") -> dict
             book = item
             break
     if book is None:
-        raise KeyError(f"Book {item_id} not found in catalog.")
+        raise KeyError(f"Item {item_id} not found in catalog.")
     if user_id not in members:
         raise KeyError(f"User {user_id} not found.")
 
     waitlist = book.setdefault("waitlist", [])
 
     if action == "add":
+        # If copies exist, no need for waitlist
         if book.get("copies_available", 0) > 0:
-            return {"message": f"Book '{book.get('title', 'Unknown')}' is available; no need for waitlist."}
+            return {
+                "message": f"Book '{book.get('title', 'Unknown')}' is available; no need for waitlist."
+            }
+        # Avoid duplicates
         if user_id in waitlist:
-            return {"message": f"User {user_id} is already on the waitlist for {item_id}."}
+            return {
+                "message": f"User {user_id} is already on the waitlist for {item_id}."
+            }
 
         waitlist.append(user_id)
         return {"item_id": item_id, "waitlist": waitlist}
@@ -433,7 +484,10 @@ def waitlist_management(item_id: str, user_id: str, action: str = "add") -> dict
         return {
             "item_id": item_id,
             "notify_user": next_user,
-            "message": f"Notify {next_user}: '{book.get('title', 'Unknown')}' is now available."
+            "message": (
+                f"Notify {next_user}: '{book.get('title', 'Unknown')}' "
+                f"is now available."
+            ),
         }
 
     else:

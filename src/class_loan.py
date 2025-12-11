@@ -1,5 +1,5 @@
 from datetime import datetime
-from src import library_functions as lib
+import library_functions as lib
 
 class Loan:
     """Represents a loan transaction."""

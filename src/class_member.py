@@ -1,4 +1,4 @@
-from src import library_functions as lib
+import library_functions as lib
 
 class Member:
     """Represents a library member and account actions."""

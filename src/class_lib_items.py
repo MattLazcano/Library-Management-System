@@ -1,17 +1,6 @@
-from src import library_functions as lib
-
-# Incororate library_items into this book class so that its not book class anymore instead just class_items? (DONE)
-# Find a way to connext this integration class thingy to the global data so that everything still works together (DONE)
-# Once you find a way to incororate the class to the global structures then polymorphism works (DONE)
-# Next thing to do after that is rework the ABC and composition if they do need any rework after everything that i'll do (DONE)
-# I need to fix up loan and all other classes that use book class since i will be making the changes DONE
-# change isbn to just item_id, because using jsut number will be confusing, Im allowed to just delete the isbn functions (DONE)
-# change validate code so that the item_id either starts with a BK, DV, or a EB and then has a total of 5 chars (ex: BK102) (DONE)
-# change all book_id to item_id (DONE)
-
 from abc import ABC, abstractmethod
 from datetime import date, timedelta
-from src import library_functions as lib
+import library_functions as lib
 
 
 class LibraryItem(ABC):
@@ -96,6 +85,11 @@ class LibraryItem(ABC):
     def genre(self):
         return self._genre
     
+    @property
+    def is_available(self) -> bool:
+        """True if at least one copy is available."""
+        return self._copies_available > 0
+    
     # --------------------------------------------------------------------
     # Global-linked Functions
     # --------------------------------------------------------------------
@@ -131,8 +125,8 @@ class LibraryItem(ABC):
 
 class BookItem(LibraryItem):
 
-    def __init__(self, item_id: str, title: str, author: str, genre: str):
-            super().__init__(item_id, title, author, genre)
+    def __init__(self, item_id: str, title: str, author: str, genre: str, copies_total: int = 1):
+        super().__init__(item_id, title, author, genre, copies_total=copies_total)
 
     @property
     def media_type(self):
@@ -144,8 +138,9 @@ class BookItem(LibraryItem):
 
 class EBookItem(LibraryItem):
 
-    def __init__(self, item_id: str, title: str, author: str, genre: str):
-            super().__init__(item_id, title, author, genre)
+    def __init__(self, item_id: str, title: str, author: str, genre: str, copies_total: int = 1):
+        super().__init__(item_id, title, author, genre, copies_total=copies_total)
+
     
     @property
     def media_type(self):
@@ -157,8 +152,8 @@ class EBookItem(LibraryItem):
 
 class DVDItem(LibraryItem):
 
-    def __init__(self, item_id: str, title: str, author: str, genre: str):
-            super().__init__(item_id, title, author, genre)
+    def __init__(self, item_id: str, title: str, author: str, genre: str, copies_total: int = 1):
+        super().__init__(item_id, title, author, genre, copies_total=copies_total)
     
     @property
     def media_type(self):

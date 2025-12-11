@@ -1,0 +1,209 @@
+{
+  "catalog": [
+    {
+      "id": "BK101",
+      "title": "Dune",
+      "author": "Frank Herbert",
+      "genre": "sci-fi",
+      "media_type": "Book",
+      "tags": [
+        "sci-fi",
+        "space",
+        "classic"
+      ],
+      "copies_total": 3,
+      "copies_available": 0,
+      "waitlist": [
+        "M2",
+        "M4"
+      ]
+    },
+    {
+      "id": "BK102",
+      "title": "Clean Code",
+      "author": "Robert C. Martin",
+      "genre": "programming",
+      "media_type": "Book",
+      "tags": [
+        "software",
+        "best-practices",
+        "programming"
+      ],
+      "copies_total": 2,
+      "copies_available": 0,
+      "waitlist": [
+        "M3",
+        "M5",
+        "M1"
+      ]
+    },
+    {
+      "id": "BK103",
+      "title": "The Hobbit",
+      "author": "J.R.R. Tolkien",
+      "genre": "fantasy",
+      "media_type": "Book",
+      "tags": [
+        "fantasy",
+        "adventure",
+        "classic"
+      ],
+      "copies_total": 4,
+      "copies_available": 2,
+      "waitlist": []
+    },
+    {
+      "id": "BK104",
+      "title": "The Pragmatic Programmer",
+      "author": "Andrew Hunt",
+      "genre": "programming",
+      "media_type": "Book",
+      "tags": [
+        "programming",
+        "craft",
+        "career"
+      ],
+      "copies_total": 3,
+      "copies_available": 1,
+      "waitlist": []
+    },
+    {
+      "id": "BK105",
+      "title": "To Kill a Mockingbird",
+      "author": "Harper Lee",
+      "genre": "fiction",
+      "media_type": "Book",
+      "tags": [
+        "classic",
+        "fiction",
+        "literature"
+      ],
+      "copies_total": 2,
+      "copies_available": 2,
+      "waitlist": []
+    },
+    {
+      "id": "BK106",
+      "title": "1984",
+      "author": "George Orwell",
+      "genre": "fiction",
+      "media_type": "Book",
+      "tags": [
+        "classic",
+        "political",
+        "dystopia"
+      ],
+      "copies_total": 5,
+      "copies_available": 3,
+      "waitlist": []
+    },
+    {
+      "id": "BK110",
+      "title": "Artificial Intelligence: A Modern Approach",
+      "author": "Russell & Norvig",
+      "genre": "computer science",
+      "media_type": "Book",
+      "tags": [],
+      "copies_total": 5,
+      "copies_available": 5,
+      "waitlist": []
+    },
+    {
+      "id": "EB200",
+      "title": "Python Tricks",
+      "author": "Dan Bader",
+      "genre": "programming",
+      "media_type": "E-Book",
+      "tags": [],
+      "copies_total": 2,
+      "copies_available": 2,
+      "waitlist": []
+    },
+    {
+      "id": "DV300",
+      "title": "The Matrix",
+      "author": "Wachowski",
+      "genre": "sci-fi",
+      "media_type": "DVD",
+      "tags": [],
+      "copies_total": 1,
+      "copies_available": 1,
+      "waitlist": []
+    }
+  ],
+  "members": {
+    "M1": {
+      "name": "Matthew",
+      "email": "matthew@example.com",
+      "active": true,
+      "balance": 0.0,
+      "preferences_tags": [
+        "sci-fi",
+        "fantasy"
+      ],
+      "preferences_authors": [
+        "Frank Herbert"
+      ],
+      "loans": {}
+    },
+    "M2": {
+      "name": "Rood",
+      "email": "rood@example.com",
+      "active": true,
+      "balance": 0.0,
+      "loans": {}
+    },
+    "M3": {
+      "name": "Kaliza",
+      "email": "kaliza@example.com",
+      "active": true,
+      "balance": 0.0,
+      "loans": {}
+    },
+    "M4": {
+      "name": "Abi",
+      "email": "abi@example.com",
+      "active": true,
+      "balance": 0.0,
+      "loans": {}
+    },
+    "M5": {
+      "name": "Dempwolf",
+      "email": "dempwolf@example.com",
+      "active": true,
+      "balance": 0.0,
+      "loans": {}
+    },
+    "M100": {
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "active": true,
+      "balance": 0.0,
+      "loans": {},
+      "preferences_tags": [],
+      "preferences_authors": []
+    }
+  },
+  "loans": [
+    {
+      "member_id": "M1",
+      "item_id": "BK103",
+      "borrow_date": "2025-12-10T23:53:56.963181",
+      "due_date": "2025-12-05T23:53:56.964702",
+      "returned": false
+    }
+  ],
+  "reminders": [],
+  "reservations": {
+    "M1": []
+  },
+  "ratings": {
+    "BK101": {
+      "M1": 5,
+      "M3": 4
+    }
+  },
+  "average_ratings": {
+    "BK101": 4.5
+  }
+}

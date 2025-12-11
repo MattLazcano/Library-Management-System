@@ -1,4 +1,4 @@
-from src import library_functions as lib
+import library_functions as lib
 
 class Search:
     """Handles all catalog searching, reservations, and recommendations."""
@@ -8,8 +8,6 @@ class Search:
         self._catalog = lib.catalog
         self._members = lib.members
         self._reservations = lib.reservations
-        self._waitlists = lib.waitlists
-
 
     # -------------------------------
     # Methods (Integrated)

@@ -1,4 +1,5 @@
 # Library Management System - API Reference
+## This was for project 2 so the information will be outdated
 
 This document lists the public methods and attributes for each major class.
 

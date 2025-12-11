@@ -1,4 +1,6 @@
 # Library Management System - Function Reference Guide
+## This was for project 1 so the information will be outdated
+
 
 This document provides comprehensive reference information for all core functions in **library_functions.py**.  
 These functions power the backend logic of the Library Management System, handling cataloging, membership, loans, search, recommendations, and overdue processing.

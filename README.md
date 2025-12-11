@@ -1,249 +1,155 @@
-# Library Management System - Function Library
+# Library Management System — INST326 Project 4
 
-**Team:** Group 5  
-**Domain:** Library and Information Management  
-**Course:** INST326 - Object-Oriented Programming for Information Science  
+**Group 5 — Matthew Lazcano, Rood Codet, Kaliza, Abinash Subedi**
 
 ---
 
 ## Project Overview
 
-Our Library Management System is a fully integrated object-oriented platform designed across Projects 1, 2, and 3.
-It combines:
-- Global function library (Project 1)
-- Encapsulated domain classes (Project 2)
-- Inheritance hierarchy, polymorphism, and composition (Project 3)
-The system manages:
-- Catalog and library item metadata
-- Members and account management
-- Loans, due dates, and overdue checks
-- Search, recommendations, and waitlist operations
-- Polymorphic loan-period logic for different media types
-All components operate as one cohesive architecture, where global structures maintain shared data, and classes provide a clean, reusable, object-oriented interface.
+This project is a fully integrated Library Management System designed for INST326.
+Our domain is Library and Information Management, and our goal was to build a system that can:
+
+* store and manage catalog items (books, e-books, DVDs),
+* manage members and their accounts,
+* process borrowing and returning,
+* handle waitlists and reservations,
+* maintain ratings and recommendations,
+* generate reports on borrowing activity,
+* persist data across program runs.
+
+Across Projects 1–4, we evolved a simple function-based system into a fully modular OOP architecture using shared global state, polymorphic LibraryItem subclasses, wrapped domain classes, and complete data persistence.
 
 ---
 
-## Problem Statement
+## Features
 
-Libraries face common challenges with:
-
-- Tracking books, members, and active loans in a consistent way  
-- Managing availability and waitlists for popular titles  
-- Recommending books based on user preferences and history  
-- Processing checkouts, returns, and overdue notifications  
-- Organizing a consistent catalog of metadata and ratings  
-
-Our system addresses these by maintaining **global shared data structures** that all classes interact with — ensuring that catalog, member, and loan information stay synchronized throughout every operation.
+* Global shared data structures for catalog, members, loans, waitlists, ratings
+* OOP classes: LibraryItem, BookItem, EBookItem, DVDItem, Member, Loan, Search, LibrarySystem
+* Borrow/return operations with due dates and overdue detection
+* Automatic waitlist handling when items are unavailable
+* Ratings + recommendation engine based on tags/history
+* Borrowing reports + overdue notifications
+* Save/load full system state to JSON
+* CSV export of borrowing summary
+* Comprehensive unit, integration, and system tests
 
 ---
 
-## Installation and Setup
+## Setup & Installation
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/library-management-system.git
-   cd library-management-system
-2. **No external dependencies required** — the project uses only the Python Standard Library.
-
-3. **Import classes or functions in your code:**
-
+1. Clone this repository:
 ```python
-from src.book_class import Book
-from src.member_class import Member
-from src.search_class import Search
-from src.loan_class import Loan
-from src import library_functions as lib
-```
-## Key Relationships
-### Inheritance (is-a)
-- Book is a LibraryItem
-- EBook is a LibraryItem
-- DVD is a LibraryItem
-
-These subclasses override `calculate_loan_period()` — the system uses polymorphism so each item type behaves differently using the same interface.
-
-### Composition (has-a / has-many)
-- Catalog HAS-MANY LibraryItems
-- Search HAS-A Catalog
-- Loan HAS-A member_id & book_id reference
-- Member data stored in global members structure
-Composition allows flexible coordination without unnecessary inheritance.
-
-### Polymorphism
-The same method behaves differently depending on media type:
-| Media Type | Loan Period | Polymorphic Behavior                 |
-| ---------- | ----------- | ------------------------------------ |
-| Book       | 21 days     | `calculate_loan_period()` returns 21 |
-| E-Book     | 14 days     | Returns 14                           |
-| DVD        | 7 days      | Returns 7                            |
-
-Any LibraryItem can be passed to functions like:
-```item.due_date_for(today)```
-and the correct subclass logic runs automatically.
-
-## Quick Usage Examples
-### Creating Items (Inheritance Demo)
-``` python
-from src.library_items import Book, EBook, DVD
-
-b = Book("B1", "Dune", "Frank Herbert", "Sci-Fi")
-e = EBook("E1", "Digital Literacy", "Smith", "Education")
-d = DVD("D1", "The Matrix", "Wachowski", "Sci-Fi")
+git clone https://github.com/MattLazcano/Library-Management-System
+cd Group-5
 ```
 
-### Catalog + Search (Composition Demo)
+2. Ensure Python 3.10+ is installed.
+
+3. No external dependencies are required — the system uses only standard library modules.
+
+---
+
+## Basic Usage Example
+
+Below is a minimal example of how to use the system:
 ```python
-from src.catalog import Catalog
-from src.search_class import Search
+from src.library_system import LibrarySystem
 
-catalog = Catalog()
-catalog.add_item(b)
-catalog.add_item(e)
-catalog.add_item(d)
+sys = LibrarySystem()
 
-s = Search(catalog)
-results = s.find_books(query="dune")
+# Add items
+sys.add_book("BK101", "Dune", "Frank Herbert", "sci-fi", copies_total=3)
+sys.add_ebook("EB200", "Python Tricks", "Dan Bader", "programming")
+sys.add_dvd("DV300", "The Matrix", "Wachowski", "sci-fi")
+
+# Add member
+m = sys.add_member("M1", "Matthew", "m@example.com")
+
+# Borrow a book
+print(m.borrow_book("BK101"))
+
+# Return it
+print(m.return_book("BK101"))
+
+# Search
+results = sys.search.find_books(query="dune")
+print(results)
+
+# Save system state
+sys_state = "state.json"
+sys.save_state(sys_state)
+
+# Load system state
+sys.load_state(sys_state)
 ```
 
-### Reserving and Waitlisting
+For a full demonstration, run:
 ```python
-print(s.reserve("M1", "1000000002"))
-print(s.manage_waitlist("1000000001", "M4", "add"))
+python demo/demo_script.py
 ```
 
-### Loan Polymorphism Demo
+---
+
+## Running Tests
+
+All tests use the unittest framework.
+
+Run the full test suite:
 ```python
-from datetime import date
-
-for item in catalog.all_items():
-    print(item.describe(), "=>", item.due_date_for(date.today()))
+python -m unittest discover -s tests -p "test_*.py" -v
 ```
 
-### Ratings
-```python
-print(lib.rate_book("M1", "1000000001", 5))
-print(lib.rate_book("M3", "1000000001", 4))
-print(lib.average_ratings)
-```
+---
+
+## Video Presentation
+
+(Insert video link here — YouTube or Google Drive)
 
 
-## Function Library Overview
-The function library contains over 20 integrated utilities, organized across four main domains:
+## Team Member Contributions (Final Project Version)
 
-### Book Management
-- `validate_code()` — Ensures valid book ID or ISBN format
+---
 
-- `is_book_available()` — Checks catalog for availability
+### Matthew Lazcano — Lead Developer, Systems Architect & Integration Engineer
 
-- `rate_book()` — Adds and averages user ratings
+* Directed the system architecture across all four projects, ensuring consistent design and functional integration
+* Implemented and refined major domain classes (BookItem, EBookItem, DVDItem, Member, Search, Loan) and coordinated their interaction with the shared global data model
+* Led the migration from a function-only system to a fully integrated OOP architecture with polymorphism, composition, and standardized item records
+* Designed and implemented the persistence layer, including save_state, load_state, CSV import/export features, and error-handling mechanisms
+* Performed extensive debugging and refactoring to ensure all unit, integration, and system tests passed successfully
+* Created the demo script, sample datasets, and presentation walkthrough showcasing core workflows, recommendations, overdue notifications, and persistence
+* Organized repository structure, enforced coding standards, resolved merge conflicts, and ensured project completeness
+* Acted as primary integrator, connecting all team components into a cohesive, functional system
 
-- `update_catalog()` — Adds new book records to the global catalog
+---
 
-### Member Management
-- `add_member()` — Adds new library members
+### Abinash Subedi — Project Coordinator, Function Developer & Presentation Lead
 
-- `update_member_balance()` — Adjusts user account balances
+* Managed team communication, deadlines, meeting structure, and task distribution throughout the multi-week development cycle
+* Expanded and refined core functional modules such as reserve_book, rate_book, validate_code, validate_isbn10_format, validate_isbn13_format, and generate_borrowing_report
+* Contributed significantly to the design of the Search class by integrating it with global functions and extending support for features like query normalization and filtering
+* Assisted in persistence planning and helped connect reporting structures with export features used in Project 4
+* Led the presentation script drafting for domain requirements, system design, and architectural rationale
+* Helped shape early architecture decisions and ensured consistent alignment with the team charter
 
-- `get_active_members()` — Lists all currently active members
+---
 
-- `pay_balance()` — Simulates payment processing
+### Kaliza Mvunganyi — Member System Developer, Workflow Logic Engineer
 
-### Search and Recommendation
-- `search_catalog()` — Keyword, author, and genre search
+* Designed and implemented the upgraded Member class and its end-to-end borrowing and returning workflows
+* Authored critical system functions: calculate_due_date, member_count, check_in_out_operations, and waitlist_management, ensuring synchronization with catalog state and loan operations
+* Improved data validation, error handling, and edge-case logic for account management and borrowing rules
+* Provided reliable and consistently correct code that required minimal revision, supporting integration stability
+* Participated in testing effort, verifying correct behavior of member workflows, waitlists, overdue logic, and user rules
+* Contributed to the video demo preparation by helping validate workflows shown on screen
 
-- `reserve_book()` — Places a member on a waitlist or reserves a copy
+---
 
-- `waitlist_management()` — Adds/removes users from waitlists
+### Rood Cadet — Loan System Developer, Recommendation Logic & Testing Assistant
 
-- `recommend_books()` — Recommends titles based on preferences and tags
-
-### Loan and Reporting
-- `calculate_due_date()` — Generates loan due dates
-
-- `generate_borrowing_report() — Summarizes borrowing statistics
-
-- `automated_overdue_notifications()` — Simulates overdue alerts
-
-## Object-Oriented Design
-The system includes four main classes that encapsulate these functions and maintain consistent state across all operations:
-
-| Class | Responsibility | Connected Global Structures |
-|:------|:----------------|:-----------------------------|
-| **Book** | Represents a single library item and its availability, ratings, and metadata | `catalog`, `average_ratings` |
-| **Member** | Represents an individual user, tracks balance, preferences, and loans | `members` |
-| **Search** | Handles catalog search, reservations, and recommendation features | `catalog`, `members`, `waitlists` |
-| **Loan** | Tracks borrowing, due dates, and overdue status | `loans` |
-
-Each class interacts directly with shared global data structures imported from `library_functions`, ensuring all updates are reflected system-wide.
-
-## Project 3 File Overview
-
-Project 3 extended our library system by adding inheritance, polymorphism, abstract classes, and composition.  
-Here is a basic overview of the major files created or updated:
-
-
-### `library_items.py`
-
-Defines the new inheritance hierarchy for library materials.
-
-- `LibraryItem` (abstract base class)
-- `Book`, `EBook`, `DVD` subclasses  
-  Each subclass overrides `calculate_loan_period()`, giving us polymorphism.
-
-
-### `catalog.py`
-
-Implements composition.
-
-- The `Catalog` has many `LibraryItem` objects.
-- Supports adding items and simple searching.
-
-This helps organize items without relying only on global data.
-
-
-### `search_class.py` (updated)
-
-Now uses composition by including a `Catalog` object inside.  
-It also connects the new item system to our old global functions like:
-
-- `reserve_book`
-- `waitlist_management`
-- `recommend_books`
-
-This makes the system unified.
-
-
-### Demo / Polymorphism Test
-
-Shows that different item types return different values using the same method call, e.g.:
-
-- Books: 21-day loan
-- EBooks: 14-day loan
-- DVDs: 7-day loan
-
-This proves polymorphism is working.
-
-
-## Team Member Contributions
-### Matthew Lazcano — Lead Developer & Project Integrator
-- Led the overall development, integration, and debugging of the system
-- Managed GitHub repository, version control, and final code implementation
-- Designed and implemented the `Book`, `Member`, `Search`, and `Loan` classes
-- Oversaw function integration, testing, and demo script creation
-- Coordinated bug fixes, code validation, and system synchronization
-
-### Abinash Subedi — Project Coordinator & Function Developer
-- Ensured team coordination by organizing meetings, managing deadlines, and maintaining communication
-- Contributed to the development of the `Search` class and core functions including:
-`reserve_book`, `rate_book`, `validate_code`, `validate_isbn10_format`, `validate_isbn13_format`, and `generate_borrowing_report`
-- Provided leadership and accountability throughout the project timeline
-
-### Kaliza Mvunganyi — Member System Developer
-- Developed the `Member` class with well-structured methods and reliable functionality
-- Authored key supporting functions: `calculate_due_date`, `member_count`, `check_in_out_operations`, and `waitlist_management`
-- Consistently delivered accurate and on-time code submissions with minimal revision needed
-
-### Rood Cadet — Function Contributor
-- Contributed in making the `Loan` class and several functional components
-- Authored functions including: `format_search_query`, `user_account`, and `recommend_books`
-- Assisted in conceptual discussions and provided testing support during development phases
+* Developed core components of the Loan class, including due-date calculations, overdue checks, and reporting hooks
+* Authored major supporting functions: format_search_query, user_account, and recommend_books, enabling the recommendation engine and unified account operations
+* Participated in shaping the text-processing and token-normalization logic of the search system
+* Assisted in the creation and refinement of the integration test scenarios and validated the final end-to-end behavior
+* Contributed to conceptual architecture discussions and supported debugging during integration phases
+* Helped test recommendation scoring, overdue notifications, and borrowing rules in preparation for the final demo

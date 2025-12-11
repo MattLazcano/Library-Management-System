@@ -1,13 +1,11 @@
-# library_system.py
-
 from __future__ import annotations
 
 from datetime import datetime
 from src import library_functions as lib
-from src.class_lib_items import BookItem, EBookItem, DVDItem
-from src.class_member import Member
-from src.class_search import Search
-from src.class_loan import Loan
+from class_lib_items import BookItem, EBookItem, DVDItem
+from class_member import Member
+from class_search import Search
+from class_loan import Loan
 
 
 class LibrarySystem:
@@ -26,7 +24,6 @@ class LibrarySystem:
         self.catalog = lib.catalog
         self.members = lib.members
         self.loans = lib.loans
-        self.waitlists = lib.waitlists
         self.ratings = lib.ratings
         self.average_ratings = lib.average_ratings
 
@@ -110,7 +107,11 @@ class LibrarySystem:
         if borrow_date is None:
             borrow_date = datetime.now()
 
-        return Loan(member_id, item_id, borrow_date=borrow_date, loan_days=loan_days)
+        if loan_days is None:
+        # Let Loan use its own default (14)
+            return Loan(member_id, item_id, borrow_date=borrow_date)
+        else:
+            return Loan(member_id, item_id, borrow_date=borrow_date, loan_days=loan_days)
 
     """
     # ---------------------------
@@ -122,11 +123,11 @@ class LibrarySystem:
 
     def reserve_item(self, member_id: str, item_id: str) -> str:
         # Reserve an item for a member (delegates to library_functions).
-        return lib.reserve_book(member_id, item_id)
+        return lib.reserve_book(member_id, item_id)"""
 
     def rate_item(self, member_id: str, item_id: str, rating: int) -> str:
         # Rate an item (delegates to library_functions.rate_book).
-        return lib.rate_book(member_id, item_id, rating) """
+        return lib.rate_book(member_id, item_id, rating)
 
     def __str__(self) -> str:
         return (
