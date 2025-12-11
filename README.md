@@ -106,7 +106,7 @@ python -m unittest discover -s tests -p "test_*.py" -v
 (Insert video link here — YouTube or Google Drive)
 
 
-## Team Member Contributions (Final Project Version)
+## Team Member Contributions
 
 ---
 
