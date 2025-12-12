@@ -1,7 +1,7 @@
 """
 Library Management System - Demo Script
 
-This script demonstrates how the library system classes (Book, Member, Search, Loan)
+This script demonstrates how the library system classes (Lib_item, Member, Search, Loan)
 interact with the shared data in library_functions.py. It simulates realistic library
 operations such as searching, borrowing, reserving, rating, and generating reports.
 
@@ -91,11 +91,11 @@ def setup_sample_data():
             "waitlist": [],
         },
         {
-            "id": "BK105",
+            "id": "DV105",
             "title": "To Kill a Mockingbird",
             "author": "Harper Lee",
             "genre": "fiction",
-            "media_type": "Book",
+            "media_type": "DVD",
             "tags": {"fiction", "classic", "literature"},
             "copies_total": 2,
             "copies_available": 2,
@@ -270,10 +270,10 @@ def demo_ratings_and_recommendations(system: LibrarySystem):
     print("Initial average ratings:", lib.average_ratings)
 
     print("\nAdding new rating for Dune (BK101) by M1:")
-    print(" ", lib.rate_book("M1", dune_id, 5))
+    print(" ", system.rate_item("M1", dune_id, 5))
 
     print("Adding another rating for Dune by M3:")
-    print(" ", lib.rate_book("M3", dune_id, 4))
+    print(" ", system.rate_item("M3", dune_id, 4))
 
     print("\nUpdated averages:", lib.average_ratings)
 
@@ -318,13 +318,13 @@ def demo_library_system_and_persistence(system: LibrarySystem):
     print(" ", system)
 
     # Export a borrowing report to CSV to show export feature
-    print("CSV EXPORT")
+    print("\nCSV EXPORT")
     report_csv = Path(project_root) / "/Users/matthewlazcano/Documents/GitHub/Group-5/tests/data/demo_borrowing_report.csv"
     print(f"\nExporting borrowing report CSV to: {report_csv}")
     persistence.export_borrowing_report_csv(report_csv)
 
     # Import catlog csv file
-    print("CSV IMPORT")
+    print("\nCSV IMPORT")
     csv_path = Path(project_root) / "/Users/matthewlazcano/Documents/GitHub/Group-5/tests/data/sample_catalog_import.csv" 
 
     print("\nCatalog size BEFORE import:", len(lib.catalog))

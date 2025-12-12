@@ -7,9 +7,9 @@
       "genre": "sci-fi",
       "media_type": "Book",
       "tags": [
-        "space",
         "sci-fi",
-        "classic"
+        "classic",
+        "space"
       ],
       "copies_total": 3,
       "copies_available": 0,
@@ -25,9 +25,9 @@
       "genre": "programming",
       "media_type": "Book",
       "tags": [
-        "programming",
+        "best-practices",
         "software",
-        "best-practices"
+        "programming"
       ],
       "copies_total": 2,
       "copies_available": 0,
@@ -59,24 +59,24 @@
       "genre": "programming",
       "media_type": "Book",
       "tags": [
+        "craft",
         "programming",
-        "career",
-        "craft"
+        "career"
       ],
       "copies_total": 3,
       "copies_available": 1,
       "waitlist": []
     },
     {
-      "id": "BK105",
+      "id": "DV105",
       "title": "To Kill a Mockingbird",
       "author": "Harper Lee",
       "genre": "fiction",
-      "media_type": "Book",
+      "media_type": "DVD",
       "tags": [
+        "fiction",
         "literature",
-        "classic",
-        "fiction"
+        "classic"
       ],
       "copies_total": 2,
       "copies_available": 2,
@@ -90,8 +90,8 @@
       "media_type": "Book",
       "tags": [
         "political",
-        "dystopia",
-        "classic"
+        "classic",
+        "dystopia"
       ],
       "copies_total": 5,
       "copies_available": 3,
@@ -138,8 +138,8 @@
       "active": true,
       "balance": 0.0,
       "preferences_tags": [
-        "fantasy",
-        "sci-fi"
+        "sci-fi",
+        "fantasy"
       ],
       "preferences_authors": [
         "Frank Herbert"
@@ -153,9 +153,9 @@
       "balance": 0.0,
       "loans": {
         "EB103": {
-          "borrowed_at": "2025-12-11T19:36:52.937949+00:00",
-          "due_at": "2025-12-31T19:36:52.937949+00:00",
-          "returned_at": "2025-12-11T19:36:52.938250+00:00"
+          "borrowed_at": "2025-12-12T00:12:45.550333+00:00",
+          "due_at": "2026-01-01T00:12:45.550333+00:00",
+          "returned_at": "2025-12-12T00:12:45.550719+00:00"
         }
       }
     },
@@ -194,10 +194,10 @@
     {
       "member_id": "M2",
       "item_id": "EB103",
-      "borrow_date": "2025-12-11T19:36:52.937949+00:00",
-      "due_date": "2025-12-31T19:36:52.937949+00:00",
+      "borrow_date": "2025-12-12T00:12:45.550333+00:00",
+      "due_date": "2026-01-01T00:12:45.550333+00:00",
       "returned": true,
-      "return_date": "2025-12-11T19:36:52.938250+00:00"
+      "return_date": "2025-12-12T00:12:45.550719+00:00"
     }
   ],
   "reminders": [],
