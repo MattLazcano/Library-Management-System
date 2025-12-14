@@ -103,7 +103,7 @@ python -m unittest discover -s tests -p "test_*.py" -v
 
 ## Video Presentation
 
-(Insert video link here — YouTube or Google Drive)
+https://www.youtube.com/watch?v=Skqf08K1G0k&t=1s
 
 
 ## Team Member Contributions
