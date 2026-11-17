@@ -1,6 +1,6 @@
 # Library Management System — INST326 Project 4
 
- Matthew Lazcano Abinash Subedi
+ Matthew Lazcano,Abinash Subedi, Kaliza Mvunganyi, Rood Cadet
 
 ---
 
