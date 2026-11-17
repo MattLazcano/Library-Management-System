@@ -1,6 +1,6 @@
 # Library Management System — INST326 Project 4
 
-**Group 5 — Matthew Lazcano, Rood Codet, Kaliza, Abinash Subedi**
+ Matthew Lazcano Abinash Subedi
 
 ---
 
